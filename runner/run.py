@@ -1,51 +1,67 @@
 import csv
+import os
 import datetime
 from openai import OpenAI
 from google.cloud import firestore
 
-client = OpenAI()
-db = firestore.Client()
 
-now = datetime.datetime.utcnow()
+def run_keyword_batch(run_id=None, csv_path="data/keywords.csv", limit=None):
+    api_key = os.getenv("OPENAI_API_KEY")
 
-run_ref = db.collection("runs").document()
-run_id = run_ref.id
+    if not api_key:
+        raise ValueError("OPENAI_API_KEY environment variable not set")
 
-print("Run ID:", run_id)
+    client = OpenAI()
+    db = firestore.Client()
 
-run_ref.set({
-    "created_at": str(now),
-    "provider": "openai",
-})
+    now = datetime.datetime.utcnow()
 
-print("Run ID:", run_id)
+    if run_id:
+        run_ref = db.collection("runs").document(run_id)
+    else:
+        run_ref = db.collection("runs").document()
+        run_id = run_ref.id
 
-print("Runner starting...")
+    print("Run ID:", run_id)
 
-now = datetime.datetime.utcnow()
-print(f"Run started at: {now}")
+    run_ref.set({
+        "created_at": str(now),
+        "provider": "openai",
+    })
 
-print("Loading keywords...")
+    print("Runner starting...")
+    print(f"Run started at: {now}")
+    print("Loading keywords...")
 
-with open("data/keywords.csv", newline="") as csvfile:
-    reader = csv.DictReader(csvfile)
-    for row in reader:
-        keyword = row["keyword"]
-        prompt = f"What does AI say about: {keyword}?"
+    processed = 0
 
-        response = client.responses.create(
-            model="gpt-4.1-mini",
-            input=prompt
-        )
+    with open(csv_path, newline="") as csvfile:
+        reader = csv.DictReader(csvfile)
+        for row in reader:
+            keyword = row["keyword"]
+            prompt = f"What does AI say about: {keyword}?"
 
-        run_ref.collection("results").document().set({
-            "keyword": keyword,
-            "prompt": prompt,
-            "response": response.output_text,
-            "created_at": str(now),
-        })
+            response = client.responses.create(
+                model="gpt-4.1-mini",
+                input=prompt
+            )
 
-        print("Keyword:", keyword)
-        print("Prompt:", prompt)
-        print("Response:", response.output_text)
-        print("---")
+            run_ref.collection("results").document().set({
+                "keyword": keyword,
+                "prompt": prompt,
+                "response": response.output_text,
+                "created_at": str(now),
+            })
+
+            print("Keyword:", keyword)
+            print("Prompt:", prompt)
+            print("Response:", response.output_text)
+            print("---")
+
+            processed += 1
+            if limit and processed >= limit:
+                break
+
+
+if __name__ == "__main__":
+    run_keyword_batch()
