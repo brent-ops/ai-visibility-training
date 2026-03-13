@@ -18,3 +18,4 @@ Training rebuild project for learning:
 - Firestore write works in Cloud Run
 - Runner loads keywords from CSV
 - Runner builds prompts from CSV keywords
+- Runner sends prompts to OpenAI and stores responses in Firestore
