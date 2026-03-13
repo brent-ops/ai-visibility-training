@@ -6,6 +6,20 @@ from google.cloud import firestore
 client = OpenAI()
 db = firestore.Client()
 
+now = datetime.datetime.utcnow()
+
+run_ref = db.collection("runs").document()
+run_id = run_ref.id
+
+print("Run ID:", run_id)
+
+run_ref.set({
+    "created_at": str(now),
+    "provider": "openai",
+})
+
+print("Run ID:", run_id)
+
 print("Runner starting...")
 
 now = datetime.datetime.utcnow()
@@ -23,12 +37,13 @@ with open("data/keywords.csv", newline="") as csvfile:
             model="gpt-4.1-mini",
             input=prompt
         )
-        db.collection("runner_results").document().set({
-    "keyword": keyword,
-    "prompt": prompt,
-    "response": response.output_text,
-    "created_at": str(now),
-})
+
+        run_ref.collection("results").document().set({
+            "keyword": keyword,
+            "prompt": prompt,
+            "response": response.output_text,
+            "created_at": str(now),
+        })
 
         print("Keyword:", keyword)
         print("Prompt:", prompt)
