@@ -19,3 +19,4 @@ Training rebuild project for learning:
 - Runner loads keywords from CSV
 - Runner builds prompts from CSV keywords
 - Runner sends prompts to OpenAI and stores responses in Firestore
+- Runner stores results under Firestore runs with nested result documents
