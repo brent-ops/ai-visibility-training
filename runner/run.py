@@ -1,8 +1,10 @@
 import csv
 import datetime
 from openai import OpenAI
+from google.cloud import firestore
 
 client = OpenAI()
+db = firestore.Client()
 
 print("Runner starting...")
 
@@ -21,6 +23,12 @@ with open("data/keywords.csv", newline="") as csvfile:
             model="gpt-4.1-mini",
             input=prompt
         )
+        db.collection("runner_results").document().set({
+    "keyword": keyword,
+    "prompt": prompt,
+    "response": response.output_text,
+    "created_at": str(now),
+})
 
         print("Keyword:", keyword)
         print("Prompt:", prompt)
