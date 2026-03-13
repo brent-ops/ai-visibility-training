@@ -16,3 +16,4 @@ Training rebuild project for learning:
 - Cloud Run deploy works
 - Firestore write works locally
 - Firestore write works in Cloud Run
+- Runner loads keywords from CSV
